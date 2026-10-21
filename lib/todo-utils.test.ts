@@ -95,3 +95,58 @@ describe("matchesSearch", () => {
     expect(matchesSearch(makeTodo({ text: "장보기" }), "")).toBe(true);
   });
 });
+
+describe("sortTodos 경계값", () => {
+  it.each(["created", "name", "due"] as const)(
+    "빈 배열을 '%s'로 정렬하면 빈 배열을 반환한다",
+    (sortBy) => {
+      expect(sortTodos([], sortBy)).toEqual([]);
+    }
+  );
+
+  it("'due'에서 마감일이 같은 항목은 원래 순서를 유지한다", () => {
+    const todos = [
+      makeTodo({ id: "a", dueDate: "2026-07-01" }),
+      makeTodo({ id: "b", dueDate: "2026-07-01" }),
+      makeTodo({ id: "c", dueDate: "2026-07-01" }),
+    ];
+
+    expect(sortTodos(todos, "due").map((t) => t.id)).toEqual(["a", "b", "c"]);
+  });
+
+  it("'name'은 한글·영문·숫자가 섞여도 모든 항목을 결정적으로 정렬한다", () => {
+    const todos = [
+      makeTodo({ id: "a", text: "사과" }),
+      makeTodo({ id: "b", text: "apple" }),
+      makeTodo({ id: "c", text: "10번 과제" }),
+      makeTodo({ id: "d", text: "가지" }),
+    ];
+
+    const ids = sortTodos(todos, "name").map((t) => t.id);
+    expect([...ids].sort()).toEqual(["a", "b", "c", "d"]);
+    expect(sortTodos([...todos].reverse(), "name").map((t) => t.id)).toEqual(
+      ids
+    );
+    // 한글끼리는 가나다순
+    expect(ids.indexOf("d")).toBeLessThan(ids.indexOf("a"));
+  });
+});
+
+describe("matchesSearch 경계값", () => {
+  it("검색어 앞뒤 공백을 무시한다", () => {
+    expect(matchesSearch(makeTodo({ text: "팀 회의 준비" }), "  회의  ")).toBe(
+      true
+    );
+  });
+
+  it.each([
+    [".", "할 일"],
+    ["*", "할 일"],
+    ["(", "할 일"],
+  ])("정규식 특수문자 '%s'는 리터럴로 취급한다", (query, text) => {
+    expect(matchesSearch(makeTodo({ text }), query)).toBe(false);
+    expect(matchesSearch(makeTodo({ text: `${text}${query}` }), query)).toBe(
+      true
+    );
+  });
+});
