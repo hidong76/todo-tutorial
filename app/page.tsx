@@ -4,7 +4,7 @@ import { AuroraText } from "@/components/ui/aurora-text"
 export default function Page() {
   const title = (
     <h1 className="text-3xl font-bold tracking-tight">
-      ✨ <AuroraText>Todo</AuroraText>
+      ✨ 오늘은 <AuroraText>뭐 할까요?</AuroraText>
     </h1>
   )
 
