@@ -228,3 +228,60 @@ describe("TodoInput 빈 입력 제출", () => {
     ).toHaveAttribute("aria-checked", "true");
   });
 });
+
+describe("TodoInput 제출 경로", () => {
+  it("추가 버튼을 클릭해도 onAdd를 호출한다", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    render(<TodoInput onAdd={onAdd} />);
+
+    await user.type(screen.getByRole("textbox", { name: "새 할 일" }), "장보기");
+    await user.click(screen.getByRole("button", { name: "추가" }));
+
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith(
+      "장보기",
+      "medium",
+      undefined,
+      undefined
+    );
+  });
+
+  it("카테고리를 선택했다가 '없음'으로 되돌리면 category 없이 onAdd를 호출한다", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    render(<TodoInput onAdd={onAdd} />);
+
+    await user.click(screen.getByRole("radio", { name: "업무" }));
+    await user.click(screen.getByRole("radio", { name: "없음" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "새 할 일" }),
+      "장보기{Enter}"
+    );
+
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith(
+      "장보기",
+      "medium",
+      undefined,
+      undefined
+    );
+  });
+
+  it("입력값의 앞뒤 공백은 그대로 onAdd에 전달한다", async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    render(<TodoInput onAdd={onAdd} />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "새 할 일" }),
+      "  장보기  {Enter}"
+    );
+
+    // trim은 useTodos.addTodo의 책임이다
+    expect(onAdd).toHaveBeenCalledExactlyOnceWith(
+      "  장보기  ",
+      "medium",
+      undefined,
+      undefined
+    );
+  });
+});

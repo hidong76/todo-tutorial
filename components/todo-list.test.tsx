@@ -393,3 +393,86 @@ describe("Todo 카테고리별 필터", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(3);
   });
 });
+
+describe("Todo 필터·검색·정렬 조합", () => {
+  // 조합 검증에 필요한 상태를 UI 조작 없이 localStorage로 직접 준비한다.
+  function seedStorage() {
+    localStorage.setItem(
+      "todos",
+      JSON.stringify([
+        { id: "1", text: "회의록 작성", completed: false, priority: "medium", createdAt: 5, category: "work" },
+        { id: "2", text: "보고서 제출", completed: true, priority: "medium", createdAt: 4, category: "work" },
+        { id: "3", text: "가족 회의", completed: false, priority: "medium", createdAt: 3, category: "personal" },
+        { id: "4", text: "다음 회의 안건", completed: false, priority: "medium", createdAt: 2, category: "work" },
+        { id: "5", text: "회의실 예약", completed: false, priority: "medium", createdAt: 1 },
+      ])
+    );
+  }
+
+  function visibleTexts() {
+    return screen
+      .getAllByRole("listitem")
+      .map((li) => within(li).getByText(/.+/, { selector: "span.flex-1" }).textContent);
+  }
+
+  async function selectCategoryFilter(
+    user: ReturnType<typeof userEvent.setup>,
+    label: string
+  ) {
+    const group = screen.getByRole("radiogroup", { name: "카테고리 필터" });
+    await user.click(within(group).getByRole("radio", { name: label }));
+  }
+
+  it("'진행중' + '업무' 필터 → 두 조건을 모두 만족하는 항목만 표시된다", async () => {
+    seedStorage();
+    const user = userEvent.setup();
+    render(<TodoList />);
+    await screen.findByText("회의록 작성");
+
+    await user.click(screen.getByRole("radio", { name: "진행중" }));
+    await selectCategoryFilter(user, "업무");
+
+    expect(visibleTexts()).toEqual(["회의록 작성", "다음 회의 안건"]);
+  });
+
+  it("검색어 + '업무' 필터 → 두 조건을 모두 만족하는 항목만 표시된다", async () => {
+    seedStorage();
+    const user = userEvent.setup();
+    render(<TodoList />);
+    await screen.findByText("회의록 작성");
+
+    await user.type(screen.getByRole("searchbox", { name: "검색" }), "회의");
+    await selectCategoryFilter(user, "업무");
+
+    expect(visibleTexts()).toEqual(["회의록 작성", "다음 회의 안건"]);
+  });
+
+  it("필터링된 결과에 정렬을 적용한다", async () => {
+    seedStorage();
+    const user = userEvent.setup();
+    render(<TodoList />);
+    await screen.findByText("회의록 작성");
+
+    await user.type(screen.getByRole("searchbox", { name: "검색" }), "회의");
+    await user.click(screen.getByRole("radio", { name: "이름순" }));
+
+    expect(visibleTexts()).toEqual([
+      "가족 회의",
+      "다음 회의 안건",
+      "회의록 작성",
+      "회의실 예약",
+    ]);
+  });
+
+  it("카테고리가 없는 항목은 특정 카테고리 필터에서 제외된다", async () => {
+    seedStorage();
+    const user = userEvent.setup();
+    render(<TodoList />);
+    await screen.findByText("회의실 예약");
+
+    await selectCategoryFilter(user, "개인");
+
+    expect(visibleTexts()).toEqual(["가족 회의"]);
+    expect(screen.queryByText("회의실 예약")).not.toBeInTheDocument();
+  });
+});
