@@ -7,6 +7,18 @@
 - 강의 본문: https://docs.claude-hunt.com
 - 수강생 결과물 공유: https://claude-hunt.com
 
+## 프로젝트 소개
+
+브라우저에서 동작하는 Todo 앱입니다. 데이터는 서버 없이 브라우저 `localStorage`에 저장됩니다.
+
+- 할 일 추가 · 완료 체크 · 삭제
+- 우선순위(높음/보통/낮음), 마감일, 카테고리(업무/개인/쇼핑) 지정
+- 제목 검색, 상태(전체/진행중/완료) · 카테고리 필터
+- 생성일순 · 이름순 · 마감일순 정렬
+- 라이트/다크 테마 (`d` 키로 전환)
+
+Server Components 를 우선하고 클라이언트 상태는 최소화하는 구조입니다.
+
 ## 기술 스택
 
 - Next.js 16 (App Router, Turbopack)
@@ -14,9 +26,12 @@
 - Tailwind CSS v4
 - shadcn/ui (radix-maia 스타일, taupe 베이스)
 - TypeScript / ESLint / Prettier
+- Vitest + Testing Library (테스트)
 - 패키지 매니저: bun 1.3.6
 
 ## 시작하기
+
+사전 준비: [bun](https://bun.sh) 이 설치되어 있어야 합니다.
 
 ```bash
 bun install
@@ -32,8 +47,20 @@ bun dev            # 개발 서버 실행
 bun run build      # 프로덕션 빌드
 bun run start      # 빌드 결과 실행
 bun run lint       # ESLint
+bun run test       # Vitest 테스트 1회 실행
+bun run test:watch # Vitest 감시 모드
 bun run typecheck  # tsc --noEmit
 bun run format     # Prettier 포맷팅
+```
+
+## 프로젝트 구조
+
+```text
+app/         # 페이지와 레이아웃 (App Router)
+components/  # Todo 컴포넌트 (입력·목록·검색·필터·정렬)와 테스트
+components/ui/  # shadcn/ui 컴포넌트
+hooks/       # use-todos (localStorage 연동 상태 훅)
+lib/         # 타입 정의와 유틸 함수
 ```
 
 ## 챕터별 시작 브랜치
